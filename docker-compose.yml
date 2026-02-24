@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  docker:
+    image: docker:27-dind
+    container_name: jenkins-docker
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # disable TLS (dev only)
+    volumes:
+      - docker_data:/var/lib/docker
+    networks:
+      - jenkins_net
+
+  jenkins:
+    image: jenkins-with-docker:local
+    container_name: jenkins
+    restart: unless-stopped
+    depends_on:
+      - docker
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      DOCKER_HOST: tcp://docker:2375
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkins_net
+
+volumes:
+  jenkins_home:
+  docker_data:
+
+networks:
+  jenkins_net:
+    driver: bridge
